@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import config from "../config";
 
 const ResumeUploader = () => {
   const [file, setFile] = useState(null);
@@ -19,9 +20,10 @@ const ResumeUploader = () => {
     const selectedFile = e.target.files[0];
     if (
       selectedFile &&
-      ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(
-        selectedFile.type
-      )
+      [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ].includes(selectedFile.type)
     ) {
       setFile(selectedFile);
       setError("");
@@ -43,11 +45,14 @@ const ResumeUploader = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/parse_resume", formData);
+      const res = await axios.post(`${config.API_BASE}/parse_resume`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       setResult(res.data);
       setError("");
     } catch (err) {
-      setError("Failed to parse resume.");
+      console.error(err);
+      setError("Failed to parse resume. Please try again.");
     }
     setLoading(false);
   };
@@ -55,9 +60,13 @@ const ResumeUploader = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 font-sans">
       <div className="max-w-2xl mx-auto bg-white shadow-md p-8 rounded-lg">
-        <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">Resume Match Analyzer</h2>
+        <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">
+          Resume Match Analyzer
+        </h2>
 
-        <label className="block mb-2 text-sm font-medium text-gray-700">Select Desired Role:</label>
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Select Desired Role:
+        </label>
         <select
           className="w-full border rounded px-3 py-2 mb-4"
           value={selectedRole}
@@ -65,7 +74,9 @@ const ResumeUploader = () => {
         >
           <option value="">-- Select a Role --</option>
           {roles.map((role) => (
-            <option key={role} value={role}>{role}</option>
+            <option key={role} value={role}>
+              {role}
+            </option>
           ))}
         </select>
 
@@ -90,18 +101,22 @@ const ResumeUploader = () => {
             <h3 className="text-lg font-bold text-gray-800 mb-2">Match Result</h3>
 
             <p className="mb-2">
-              <strong className="text-gray-700">Selected Role:</strong> {result.desired_role}
+              <strong className="text-gray-700">Selected Role:</strong>{" "}
+              {result.desired_role}
             </p>
             <p className="mb-2">
               <strong className="text-gray-700">Matched Keywords:</strong>{" "}
-              {result.matched_keywords.length
+              {result.matched_keywords?.length
                 ? result.matched_keywords.join(", ")
                 : "None"}
             </p>
             <p className="mb-2">
-              <strong className="text-gray-700">Match Count:</strong> {result.match_count}
+              <strong className="text-gray-700">Match Count:</strong>{" "}
+              {result.match_count}
             </p>
-            <p className="mt-4 font-semibold text-indigo-600">{result.recommendation}</p>
+            <p className="mt-4 font-semibold text-indigo-600">
+              {result.recommendation}
+            </p>
           </div>
         )}
       </div>
