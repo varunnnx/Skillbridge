@@ -19,14 +19,19 @@ ROLE_KEYWORDS = {
         "excel", "sql", "power bi", "tableau", "python", "data analysis", "statistics",
         "pivot table", "data visualization", "numpy", "pandas", "matplotlib", "seaborn", "jupyter", "postgresql", "mysql"
     ],
+    
     "AI Engineer": [
         "machine learning", "deep learning", "tensorflow", "pytorch", "nlp", "cv", "bert",
-        "neural network", "transformer", "scikit-learn", "keras", "matplotlib", "pandas", "flask", "huggingface"
+        "neural network", "transformer", "scikit-learn", "keras", "matplotlib", "pandas",
+        "flask", "huggingface", "distilbert", "nltk", "text classification",
+        "multi-class classification", "tokenization", "fine-tuning", "python"
     ],
+
     "Full Stack Developer": [
         "react", "node", "express", "django", "api", "javascript", "html", "css", "typescript",
         "mongodb", "postgresql", "mysql", "flask", "vite", "next.js", "redux", "tailwind", "bootstrap"
     ],
+    
     "Software Engineer": [
         "c++", "java", "python", "data structures", "algorithms", "oop", "system design", "linux",
         "multithreading", "rest api", "mysql", "postgresql", "docker", "git", "flask", "socket programming"
@@ -54,25 +59,24 @@ def match_keywords(text, keywords):
 # Extract text from file
 def extract_text_from_file(filepath):
     text = ""
-
     if filepath.endswith(".pdf"):
         with pdfplumber.open(filepath) as pdf:
             for page in pdf.pages:
                 text += page.extract_text() or ""
-
     elif filepath.endswith(".docx"):
         text = docx2txt.process(filepath)
-
     elif filepath.endswith(".txt"):
         with open(filepath, "r", encoding="utf-8") as f:
             text = f.read()
 
-    print("\n======= Extracted Text =======\n")
-    print(text[:2000])
-    print("\n==============================\n")
-
     return text
 
+# Root route (important for Render)
+@app.route("/")
+def home():
+    return jsonify({"message": "✅ SkillBridge Backend is live 🚀"})
+
+# Resume parsing route
 @app.route('/parse_resume', methods=['POST'])
 def parse_resume():
     if 'resume' not in request.files or 'desired_role' not in request.form:
@@ -91,17 +95,17 @@ def parse_resume():
         fullstack_highlights = match_keywords(text, FULLSTACK_KEYWORDS)
         role_keywords = ROLE_KEYWORDS.get(desired_role, [])
 
-        # For AI/Full Stack roles, use specialized highlights
+        # Role-based matching
         if desired_role == "Full Stack Developer":
-            matched_role_keywords = fullstack_highlights
+            matched_role_keywords = match_keywords(text, ROLE_KEYWORDS["Full Stack Developer"])
         elif desired_role == "AI Engineer":
-            matched_role_keywords = aiml_highlights
+            matched_role_keywords = match_keywords(text, ROLE_KEYWORDS["AI Engineer"])
         else:
             matched_role_keywords = match_keywords(text, role_keywords)
 
         match_count = len(matched_role_keywords)
 
-        # Match recommendation based on absolute match count
+        # Recommendation logic
         if match_count >= 8:
             recommendation = f"✅ You are a strong match for the role of {desired_role}!"
         elif 5 <= match_count < 8:
