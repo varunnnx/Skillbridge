@@ -1,4 +1,5 @@
 Flask
-gunicorn
-PyPDF2
+Flask-Cors
 docx2txt
+pdfplumber
+gunicorn
